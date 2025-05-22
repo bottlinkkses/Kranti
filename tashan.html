@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Predictor Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            /* Light Theme Colors */
+            --primary-light: #4CAF50;
+            --secondary-light: #2196F3;
+            --accent-light: #FF5722;
+            --gift-light: #9C27B0;
+            --background-light: #f5f7fa;
+            --card-light: #ffffff;
+            --text-light: #333333;
+            --border-light: rgba(0, 0, 0, 0.1);
+            
+            /* Dark Theme Colors */
+            --primary-dark: #4CAF50;
+            --secondary-dark: #2196F3;
+            --accent-dark: #FF5722;
+            --gift-dark: #BA68C8;
+            --background-dark: #121212;
+            --card-dark: #1E1E1E;
+            --text-dark: #f5f5f5;
+            --border-dark: rgba(255, 255, 255, 0.1);
+            
+            /* Current Theme Variables */
+            --primary: var(--primary-light);
+            --secondary: var(--secondary-light);
+            --accent: var(--accent-light);
+            --gift: var(--gift-light);
+            --background: var(--background-light);
+            --card: var(--card-light);
+            --text: var(--text-light);
+            --border: var(--border-light);
+            --profit: #4CAF50;
+            --loss: #F44336;
+        }
+
+        [data-theme="dark"] {
+            --primary: var(--primary-dark);
+            --secondary: var(--secondary-dark);
+            --accent: var(--accent-dark);
+            --gift: var(--gift-dark);
+            --background: var(--background-dark);
+            --card: var(--card-dark);
+            --text: var(--text-dark);
+            --border: var(--border-dark);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 500;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background-color: var(--card);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            animation: fadeIn 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .theme-switch {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 0 15px var(--secondary);
+            animation: pulse 2.5s infinite;
+            border: none;
+            outline: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 15px var(--secondary); }
+            50% { transform: scale(1.05); box-shadow: 0 0 25px var(--secondary); }
+        }
+
+        .theme-switch i {
+            color: white;
+            font-size: 20px;
+        }
+
+        .user-counter {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            color: var(--primary);
+            z-index: 10;
+            backdrop-filter: blur(5px);
+        }
+
+        .user-counter span {
+            color: var(--text);
+            font-weight: 700;
+        }
+
+        .chart-container {
+            height: 120px;
+            width: 100%;
+            margin: 15px 0 25px;
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            background: var(--card);
+            border: 1px solid var(--border);
+        }
+
+        #tradingChart {
+            position: relative;
+            z-index: 2;
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 20px;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .logo {
+            height: 50px;
+            width: auto;
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.2));
+        }
+
+        [data-theme="dark"] .logo {
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.5));
+        }
+
+        .game-options {
+            display: flex;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .game-option {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 600;
+            font-size: 14px;
+            background: rgba(33, 150, 243, 0.1);
+            border: 1px solid rgba(33, 150, 243, 0.2);
+            color: var(--text);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .game-option:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(33, 150, 243, 0.2);
+        }
+
+        .game-option.active {
+            background: rgba(33, 150, 243, 0.2);
+            border-color: var(--secondary);
+            color: var(--text);
+            box-shadow: 0 0 20px rgba(33, 150, 243, 0.3);
+        }
+
+        .game-icon {
+            width: 30px;
+            height: 30px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.2));
+        }
+
+        [data-theme="dark"] .game-icon {
+            filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.5));
+        }
+
+        .input-container {
+            position: relative;
+            margin: 25px 0;
+        }
+
+        .input-container label {
+            display: block;
+            margin-bottom: 10px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            color: var(--secondary);
+            letter-spacing: 0.5px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 10px;
+            border: none;
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid var(--border);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text);
+            transition: all 0.3s ease;
+        }
+
+        [data-theme="dark"] .input-field {
+            background: rgba(30, 30, 30, 0.8);
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2);
+        }
+
+        .message {
+            position: absolute;
+            bottom: -22px;
+            left: 0;
+            font-size: 12px;
+            color: var(--accent);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .message.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .result-container {
+            height: 100px;
+            width: 100%;
+            margin: 25px 0;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] .result-container {
+            background: rgba(30, 30, 30, 0.8);
+        }
+
+        .result {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            position: relative;
+            z-index: 2;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        .result.big {
+            color: var(--primary);
+            text-shadow: 0 0 15px rgba(76, 175, 80, 0.6);
+        }
+
+        .result.small {
+            color: var(--secondary);
+            text-shadow: 0 0 15px rgba(33, 150, 243, 0.6);
+        }
+
+        .result.red {
+            color: var(--loss);
+            text-shadow: 0 0 15px rgba(244, 67, 54, 0.6);
+        }
+
+        .result.green {
+            color: var(--profit);
+            text-shadow: 0 0 15px rgba(76, 175, 80, 0.6);
+        }
+
+        .result.odd {
+            color: #FFC107;
+            text-shadow: 0 0 15px rgba(255, 193, 7, 0.6);
+        }
+
+        .result.even {
+            color: #9C27B0;
+            text-shadow: 0 0 15px rgba(156, 39, 176, 0.6);
+        }
+
+        .loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(245, 245, 245, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 3;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        [data-theme="dark"] .loading {
+            background: rgba(30, 30, 30, 0.8);
+        }
+
+        .loading.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid transparent;
+            border-top-color: var(--secondary);
+            border-radius: 50%;
+            animation: spin 1.2s linear infinite;
+            position: relative;
+        }
+
+        .spinner::before {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            right: 5px;
+            bottom: 5px;
+            border: 3px solid transparent;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1.5s linear infinite reverse;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            border: none;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            z-index: 1;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: 0.5s;
+            z-index: -1;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-start {
+            background-color: var(--primary);
+            box-shadow: 0 5px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-register {
+            background-color: var(--secondary);
+            box-shadow: 0 5px 20px rgba(33, 150, 243, 0.4);
+        }
+
+        .btn-telegram {
+            background-color: #673AB7;
+            box-shadow: 0 5px 20px rgba(103, 58, 183, 0.4);
+        }
+
+        .btn-gift {
+            background-color: var(--gift);
+            box-shadow: 0 5px 20px rgba(156, 39, 176, 0.4);
+        }
+
+        .btn-support {
+            background-color: var(--accent);
+            box-shadow: 0 5px 20px rgba(255, 87, 34, 0.4);
+        }
+
+        .info-text {
+            font-size: 14px;
+            color: var(--text);
+            opacity: 0.8;
+            text-align: center;
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 500px) {
+            .container {
+                padding: 20px 15px;
+            }
+            
+            .game-options {
+                flex-direction: column;
+            }
+            
+            .btn {
+                padding: 14px;
+            }
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <div class="container">
+        <button class="theme-switch" id="themeSwitch">
+            <i class="fas fa-sun"></i>
+        </button>
+        
+        <div class="user-counter">
+            Online: <span id="onlineUsers">1,284</span>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="tradingChart"></canvas>
+        </div>
+        
+        <div class="logo-container">
+            <img src="logo13.png" alt="Logo" class="logo">
+        </div>
+        
+        <div class="game-options">
+            <div class="game-option active" data-game="wingo">
+                <img src="wingo.png" alt="Wingo" class="game-icon">
+                <span>Wingo 1m</span>
+            </div>
+            <div class="game-option" data-game="moto">
+                <img src="moto.png" alt="Moto Racing" class="game-icon">
+                <span>Moto Racing</span>
+            </div>
+        </div>
+        
+        <div class="input-container">
+            <label for="periodNumber">ENTER PERIOD NUMBER</label>
+            <input type="number" id="periodNumber" class="input-field" placeholder="Enter period">
+            <div class="message" id="message"></div>
+        </div>
+        
+        <div class="result-container">
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+            </div>
+            <div class="result" id="result">-</div>
+        </div>
+        
+        <button class="btn btn-start" id="startBtn">
+            <i class="fas fa-play"></i> Start Prediction
+        </button>
+        
+        <p class="info-text">
+            Create a new account by clicking on 'Register' button, if you use this hack in your old account, then hack will not work perfectly. 'Register' बटन पर क्लिक करके एक नया account बनाएं, यदि आप इस हैक का उपयोग अपने पुराने account में करते हैं, तो आपका loss हों सकता है।
+        </p>
+        
+        <button class="btn btn-register" id="registerBtn">
+            <i class="fas fa-user-plus"></i> Register Account
+        </button>
+        
+        <button class="btn btn-telegram" id="telegramBtn">
+            <i class="fab fa-telegram"></i> Join Telegram
+        </button>
+        
+        <button class="btn btn-gift" id="giftBtn">
+            <i class="fas fa-gift"></i> Gift Code
+        </button>
+        
+        <button class="btn btn-support" id="supportBtn">
+            <i class="fas fa-headset"></i> Customer Support
+        </button>
+    </div>
+
+    <script>
+    	// Function to open URL in external browser
+        function openInBrowser(url) {
+            // This will be handled by Android WebView's shouldOverrideUrlLoading
+            window.open(url, '_system');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Theme switching functionality
+            const themeSwitch = document.getElementById('themeSwitch');
+            const body = document.body;
+            const icon = themeSwitch.querySelector('i');
+            
+            // Check for saved theme preference or use light theme
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            body.setAttribute('data-theme', savedTheme);
+            
+            // Set appropriate icon
+            if (savedTheme === 'dark') {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+            
+            themeSwitch.addEventListener('click', function() {
+                const currentTheme = body.getAttribute('data-theme');
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                
+                // Update theme
+                body.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                
+                // Update icon with animation
+                themeSwitch.style.transform = 'scale(0.9) rotate(180deg)';
+                setTimeout(() => {
+                    if (newTheme === 'dark') {
+                        icon.classList.remove('fa-sun');
+                        icon.classList.add('fa-moon');
+                    } else {
+                        icon.classList.remove('fa-moon');
+                        icon.classList.add('fa-sun');
+                    }
+                    themeSwitch.style.transform = 'scale(1) rotate(0)';
+                }, 200);
+            });
+            
+            // Initialize trading chart with professional styling
+            const ctx = document.getElementById('tradingChart').getContext('2d');
+            
+            // Generate professional trading data with 80% profit probability
+            function generateTradingData() {
+                const data = [50];
+                let currentTrend = Math.random() > 0.2 ? 1 : -1; // 80% chance uptrend
+                let volatility = 0.5 + Math.random();
+                let lastValue = 50;
+                
+                for (let i = 1; i < 100; i++) {
+                    // Occasionally change trend (20% chance)
+                    if (Math.random() < 0.2) {
+                        currentTrend *= -1;
+                        volatility = 0.5 + Math.random();
+                    }
+                    
+                    // Calculate price movement with momentum
+                    let change;
+                    if (currentTrend === 1) {
+                        // Uptrend - larger positive changes (profit)
+                        change = (0.5 + Math.random() * 2) * volatility;
+                    } else {
+                        // Downtrend - smaller negative changes (loss)
+                        change = (-0.3 - Math.random() * 1) * volatility;
+                    }
+                    
+                    // Add some random noise
+                    change += (Math.random() - 0.5) * 0.5;
+                    
+                    // Apply change with 80% upward bias
+                    let newValue = lastValue + change;
+                    
+                    // Ensure values stay within bounds (20-80 range)
+                    if (newValue > 80) {
+                        newValue = 80;
+                        currentTrend = -1; // Reverse trend at top
+                    }
+                    if (newValue < 20) {
+                        newValue = 20;
+                        currentTrend = 1; // Reverse trend at bottom
+                    }
+                    
+                    data.push(newValue);
+                    lastValue = newValue;
+                }
+                
+                return data;
+            }
+            
+            const tradingChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array(100).fill(''),
+                    datasets: [{
+                        data: generateTradingData(),
+                        borderWidth: 2,
+                        tension: 0.1,
+                        pointRadius: 0,
+                        segment: {
+                            borderColor: ctx => {
+                                const prev = ctx.p0.parsed.y;
+                                const curr = ctx.p1.parsed.y;
+                                return curr >= prev ? '#4CAF50' : '#F44336';
+                            }
+                        },
+                        fill: {
+                            target: 'origin',
+                            above: 'rgba(76, 175, 80, 0.1)',
+                            below: 'rgba(244, 67, 54, 0.1)'
+                        }
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 0
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: false,
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            display: false,
+                            suggestedMin: 20,
+                            suggestedMax: 80
+                        }
+                    },
+                    elements: {
+                        line: {
+                            cubicInterpolationMode: 'monotone'
+                        }
+                    }
+                }
+            });
+            
+            // Update chart in real-time with optimized performance
+            let lastValue = tradingChart.data.datasets[0].data[tradingChart.data.datasets[0].data.length - 1] || 50;
+            let currentTrend = Math.random() > 0.2 ? 1 : -1; // 80% chance uptrend
+            let volatility = 0.5 + Math.random();
+            
+            function updateChart() {
+                if (tradingChart.data.datasets[0].data.length >= 100) {
+                    tradingChart.data.datasets[0].data.shift();
+                }
+                
+                // Occasionally change trend (20% chance)
+                if (Math.random() < 0.2) {
+                    currentTrend *= -1;
+                    volatility = 0.5 + Math.random();
+                }
+                
+                // Calculate price movement
+                let change;
+                if (currentTrend === 1) {
+                    // Uptrend - larger positive changes (profit)
+                    change = (0.3 + Math.random() * 1.5) * volatility;
+                } else {
+                    // Downtrend - smaller negative changes (loss)
+                    change = (-0.2 - Math.random() * 0.8) * volatility;
+                }
+                
+                // Add some random noise
+                change += (Math.random() - 0.5) * 0.3;
+                
+                // Apply change
+                let newValue = lastValue + change;
+                
+                // Ensure values stay within bounds (20-80 range)
+                if (newValue > 80) {
+                    newValue = 80;
+                    currentTrend = -1;
+                }
+                if (newValue < 20) {
+                    newValue = 20;
+                    currentTrend = 1;
+                }
+                
+                tradingChart.data.datasets[0].data.push(newValue);
+                lastValue = newValue;
+                tradingChart.update();
+                
+                // Schedule next update with random delay (200-400ms)
+                setTimeout(updateChart, 200 + Math.random() * 200);
+            }
+            setTimeout(updateChart, 200 + Math.random() * 200);
+            
+            // Update online users counter
+            const onlineUsersElement = document.getElementById('onlineUsers');
+            function updateOnlineUsers() {
+                const change = Math.floor(Math.random() * 100) - 30; // -30 to +70
+                const current = parseInt(onlineUsersElement.textContent.replace(/,/g, '')) || 1000;
+                let newCount = current + change;
+                
+                // Keep between 300-5000
+                if (newCount < 300) newCount = 300 + Math.floor(Math.random() * 200);
+                if (newCount > 5000) newCount = 5000 - Math.floor(Math.random() * 200);
+                
+                onlineUsersElement.textContent = newCount.toLocaleString();
+                
+                // Schedule next update with random delay (1-3 seconds)
+                setTimeout(updateOnlineUsers, 1000 + Math.random() * 2000);
+            }
+            updateOnlineUsers();
+            
+            // Game logic
+            const startBtn = document.getElementById('startBtn');
+            const resultElement = document.getElementById('result');
+            const loadingElement = document.getElementById('loading');
+            const periodInput = document.getElementById('periodNumber');
+            const gameOptions = document.querySelectorAll('.game-option');
+            const messageElement = document.getElementById('message');
+            const registerBtn = document.getElementById('registerBtn');
+            const telegramBtn = document.getElementById('telegramBtn');
+            const giftBtn = document.getElementById('giftBtn');
+            const supportBtn = document.getElementById('supportBtn');
+            
+            let currentGame = 'wingo';
+            let usedPeriods = new Set();
+            
+            // Game option selection
+            gameOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    gameOptions.forEach(opt => opt.classList.remove('active'));
+                    this.classList.add('active');
+                    currentGame = this.dataset.game;
+                    resultElement.textContent = '-';
+                    resultElement.className = 'result';
+                    
+                    // Add click animation
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1)';
+                    }, 200);
+                });
+            });
+            
+            // Show message
+            function showMessage(text, isError = false) {
+                messageElement.textContent = text;
+                messageElement.style.color = isError ? '#FF5722' : '#2196F3';
+                messageElement.classList.add('show');
+                
+                setTimeout(() => {
+                    messageElement.classList.remove('show');
+                }, 3000);
+            }
+            
+            // Start button click handler
+            startBtn.addEventListener('click', function() {
+                const period = periodInput.value.trim();
+                
+                if (!period) {
+                    showMessage('Please enter a period number', true);
+                    return;
+                }
+                
+                if (usedPeriods.has(period)) {
+                    showMessage('Period already used', true);
+                    return;
+                }
+                
+                usedPeriods.add(period);
+                
+                // Show loading
+                loadingElement.classList.add('active');
+                resultElement.style.opacity = '0';
+                
+                // Button click animation
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1)';
+                }, 200);
+                
+                // Simulate loading for 2 seconds
+                setTimeout(() => {
+                    loadingElement.classList.remove('active');
+                    
+                    // Generate random result
+                    let result, resultClass;
+                    if (currentGame === 'wingo') {
+                        const outcomes = ['big', 'small', 'red', 'green'];
+                        const randomIndex = Math.floor(Math.random() * outcomes.length);
+                        result = outcomes[randomIndex];
+                        resultClass = result;
+                    } else {
+                        const outcomes = ['odd', 'even'];
+                        const randomIndex = Math.floor(Math.random() * outcomes.length);
+                        result = outcomes[randomIndex];
+                        resultClass = result;
+                    }
+                    
+                    // Display result with animation
+                    resultElement.textContent = result;
+                    resultElement.className = 'result ' + resultClass;
+                    resultElement.style.opacity = '1';
+                    
+                    // Glow animation
+                    const glowIntensity = [15, 25, 15];
+                    let i = 0;
+                    const glowInterval = setInterval(() => {
+                        resultElement.style.textShadow = `0 0 ${glowIntensity[i]}px currentColor`;
+                        i = (i + 1) % glowIntensity.length;
+                        if (i === 0) clearInterval(glowInterval);
+                    }, 200);
+                    
+                }, 2000);
+            });
+            
+            // Button click handlers with animations
+            function setupButton(btn, url) {
+                btn.addEventListener('click', function() {
+                    // Click animation
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1)';
+                    }, 200);
+                    
+                    // Ripple effect
+                    const ripple = document.createElement('span');
+                    ripple.style.position = 'absolute';
+                    ripple.style.borderRadius = '50%';
+                    ripple.style.transform = 'scale(0)';
+                    ripple.style.animation = 'ripple 0.6s linear';
+                    ripple.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+                    ripple.style.pointerEvents = 'none';
+                    
+                    // Set ripple size and position
+                    const diameter = Math.max(btn.clientWidth, btn.clientHeight);
+                    const radius = diameter / 2;
+                    ripple.style.width = ripple.style.height = `${diameter}px`;
+                    ripple.style.left = `${event.clientX - btn.getBoundingClientRect().left - radius}px`;
+                    ripple.style.top = `${event.clientY - btn.getBoundingClientRect().top - radius}px`;
+                    
+                    btn.appendChild(ripple);
+                    
+                    // Remove ripple after animation
+                    setTimeout(() => {
+                        ripple.remove();
+                    }, 600);
+                    
+                    // Open URL in external browser
+                    setTimeout(() => {
+                        openInBrowser(url);
+                    }, 300);
+                });
+            }
+            
+            // Setup buttons with animations
+            setupButton(registerBtn, 'https://colorsignup.github.io/ES1/Tashan');
+            setupButton(telegramBtn, 'https://telegram.dog/EarningScripter1');
+            setupButton(giftBtn, 'https://t.me/+7-YmP4dJ8JVkM2I1');
+            setupButton(supportBtn, 'https://telegram.dog/EarningScripter1_bot');
+            
+            // Add ripple animation to styles
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes ripple {
+                    to {
+                        transform: scale(4);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        });
+    </script>
+</body>
+</html>
