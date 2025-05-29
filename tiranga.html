@@ -325,6 +325,11 @@
             text-shadow: 0 0 15px rgba(76, 175, 80, 0.6);
         }
 
+        .result.violet {
+            color: #9C27B0;
+            text-shadow: 0 0 15px rgba(156, 39, 176, 0.6);
+        }
+
         .result.odd {
             color: #FFC107;
             text-shadow: 0 0 15px rgba(255, 193, 7, 0.6);
@@ -552,7 +557,7 @@
     </div>
 
     <script>
-    	// Function to open URL in external browser
+        // Function to open URL in external browser
         function openInBrowser(url) {
             // This will be handled by Android WebView's shouldOverrideUrlLoading
             window.open(url, '_system');
@@ -788,6 +793,20 @@
             let currentGame = 'wingo';
             let usedPeriods = new Set();
             
+            // All possible results for Wingo game with numbers
+            const wingoResults = [
+                "0 Small Violet",
+                "1 Small Green",
+                "2 Small Red",
+                "3 Small Green",
+                "4 Small Red",
+                "5 Big Violet",
+                "6 Big Red",
+                "7 Big Green",
+                "8 Big Red",
+                "9 Big Green"
+            ];
+            
             // Game option selection
             gameOptions.forEach(option => {
                 option.addEventListener('click', function() {
@@ -846,14 +865,29 @@
                 setTimeout(() => {
                     loadingElement.classList.remove('active');
                     
-                    // Generate random result
                     let result, resultClass;
+                    
                     if (currentGame === 'wingo') {
-                        const outcomes = ['big', 'small', 'red', 'green'];
-                        const randomIndex = Math.floor(Math.random() * outcomes.length);
-                        result = outcomes[randomIndex];
-                        resultClass = result;
+                        // For Wingo game, select from predefined results
+                        const randomIndex = Math.floor(Math.random() * wingoResults.length);
+                        result = wingoResults[randomIndex];
+                        
+                        // Determine the result class based on the result
+                        if (result.includes('Big')) {
+                            resultClass = 'big';
+                        } else if (result.includes('Small')) {
+                            resultClass = 'small';
+                        }
+                        
+                        if (result.includes('Red')) {
+                            resultClass += ' red';
+                        } else if (result.includes('Green')) {
+                            resultClass += ' green';
+                        } else if (result.includes('Violet')) {
+                            resultClass += ' violet';
+                        }
                     } else {
+                        // For Moto game, keep original behavior
                         const outcomes = ['odd', 'even'];
                         const randomIndex = Math.floor(Math.random() * outcomes.length);
                         result = outcomes[randomIndex];
@@ -916,7 +950,7 @@
                 });
             }
             
-            // Setup buttons with animations
+            // Setup buttons with animations and external browser opening
             setupButton(registerBtn, 'https://colorsignup.github.io/ES1/Tiranga');
             setupButton(telegramBtn, 'https://telegram.dog/EarningScripter1');
             setupButton(giftBtn, 'https://t.me/+7-YmP4dJ8JVkM2I1');
